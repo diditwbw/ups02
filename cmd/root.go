@@ -6,6 +6,7 @@ import (
 	"time"
 	"ups02/cmd/server"
 	"ups02/config"
+	"ups02/provider"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,11 +18,12 @@ func Execute() {
 	ctx := context.Background()
 	config.LoadEnvirontment()
 
-	_, err := config.SetDatabase()
+	db, err := config.SetDatabase()
 	if err != nil {
 		logrus.Fatalf("Error setting up dastabase %v", err)
 	}
 
+	provider.NewProvider(db, server)
 	go func() {
 		if err := server.Start(ctx, os.Getenv(config.AppPort)); err != nil {
 			logrus.Errorf("Error Starting the server %v", err)

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"ups02/x/interfacesx"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -11,6 +12,8 @@ import (
 type Ginserver interface {
 	Start(ctx context.Context, httpAddress string) error
 	Shutdown(ctx context.Context) error
+	RegisterGroupRoute(path string, routes []interfacesx.RouteDefinition, middleWare ...gin.HandlerFunc)
+	RegisterRoute(method, path string, handler gin.HandlerFunc)
 }
 
 type GinServerBuilder struct {
@@ -54,4 +57,43 @@ func (gs *ginServer) Shutdown(ctx context.Context) error {
 	logrus.Info("Server is Exiting")
 
 	return nil
+}
+
+// method register in single routes
+func (gs *ginServer) RegisterRoute(method, path string, handler gin.HandlerFunc) {
+	switch method {
+	case "GET":
+		gs.engine.GET(path, handler)
+	case "POST":
+		gs.engine.GET(path, handler)
+	case "PUT":
+		gs.engine.GET(path, handler)
+	case "DELETE":
+		gs.engine.GET(path, handler)
+	case "PATCH":
+		gs.engine.GET(path, handler)
+	default:
+		logrus.Errorf("Invalid https method")
+	}
+}
+
+func (gs *ginServer) RegisterGroupRoute(path string, routes []interfacesx.RouteDefinition, middleWare ...gin.HandlerFunc) {
+	group := gs.engine.Group(path)
+	group.Use(middleWare...)
+	for _, route := range routes {
+		switch route.Method {
+		case "GET":
+			group.GET(route.Path, route.Handler)
+		case "POST":
+			group.POST(route.Path, route.Handler)
+		case "PUT":
+			group.PUT(route.Path, route.Handler)
+		case "DELETE":
+			group.DELETE(route.Path, route.Handler)
+		case "PATCH":
+			group.PATCH(route.Path, route.Handler)
+		default:
+			logrus.Errorf("Invalid https method")
+		}
+	}
 }
